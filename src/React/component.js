@@ -100,8 +100,12 @@ export class Component {
     // 根据老的虚拟dom查找老的真实dom
     const oldDom = findDom(oldRenderVdom)
     const newRenderVdom = this.render()
+    const extraArgs = this.getSnapshotBeforeUpdate && this.getSnapshotBeforeUpdate.call(this)
     compareTwoVdom(oldDom.parentNode,oldRenderVdom,newRenderVdom) //比较差异，更新页面
     this.oldRenderVdom = newRenderVdom
+    if(this.componentDidUpdate){
+      this.componentDidUpdate(this.props,this.state,extraArgs)
+    }
   }
 }
 // static isReactComponent = true
