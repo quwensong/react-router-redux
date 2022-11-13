@@ -6,53 +6,65 @@ import ReactDOM from './React/react-dom';
 /**
  * 组件的属性和状态改变以后组件都会更，视图都会渲染
  */
-class Text extends React.Component {
+class Son extends React.Component {
   constructor(props){
     super(props)
-    this.Tdom = React.createRef()
+    this.state = { 
+      son:'儿子组件'
+    }
   }
-
+  componentWillMount = () => {
+    console.log('Son - componentWillMount')
+  }
   render(){
-    return (
-      <h1 ref={this.Tdom}>我是文本组件</h1>
-    )
-  }
-}
-
-function Fun(props,ref){
-  return (
-    <h3 ref={ref}>函数组件</h3>
-  )
-}
-
-const ForwardFun = React.forwardRef(Fun)
-
-class Clock extends React.Component {
-  constructor(props){
-    super(props)
-    this.numberA = React.createRef()
-  }
-  handlerClick = (e)=>{
-    console.log(this.numberA.current)
-  }
-  
-  render(){
-    console.log(this)
+    console.log('Son - render')
     const vdom = (
-      <h2 className='active'>
-        <ForwardFun ref={this.numberA}/>
-        <input />
-        <button onClick={this.handlerClick}>显示</button>
+      <h2>
+        <p>
+          {this.state.son}
+        </p>
+        <p>{this.props.count}</p>
       </h2>
     )
-    console.log("🚀 ~ file: index.js ~ line 32 ~ Clock ~ render ~ vdom", vdom)
+    return vdom
+  }
+  componentDidMount = () => {
+    console.log('Son - componentDidMount')
+  }
+  componentWillReceiveProps(){
+
+  }
+  componentWillUnmount(){
+
+  }
+
+}
+
+
+class Father extends React.Component {
+  constructor(props){
+    super(props)
+    this.state = { 
+      number:0
+    }
+  }
+  addNumber = ()=>{
+    this.setState({number: this.state.number + 1})
+  }
+  render(){
+    const vdom = (
+      <h2 className='active'>
+        <p>
+          {this.state.number}
+        </p>
+        {this.state.number === 4 ? null : <Son count={this.state.number}/>}
+        <button onClick={this.addNumber}>增加1</button>
+      </h2>
+    )
     return vdom
   }
 }
 
-console.log(<Clock name='quwensong'/>)
 
-ReactDOM.render(<Clock name='quwensong'/>,document.getElementById('root'))
+ReactDOM.render(<Father name='quwensong'/>,document.getElementById('root'))
 
-
-// ({...this.addressForm,this.storeId})

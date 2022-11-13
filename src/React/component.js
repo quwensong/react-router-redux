@@ -61,10 +61,21 @@ class Updater {
 }
 
 function shouldUpdate(classInstance,nextProps,nextState){
-  // 秀修改实例的状态
+  let willUpdate = true
+  if(classInstance.shouldComponentUpdate && !classInstance.shouldComponentUpdate(nextProps,nextState)) {
+    willUpdate = false
+  }
+  if(willUpdate && classInstance.componentWillUpdate){
+    classInstance.componentWillUpdate()
+  }
+
+  if(nextProps) classInstance.props = nextProps
+  // 修改实例的状态
   classInstance.state = nextState
-  // 调用类组件实例的更新方法
-  classInstance.forceUpdate()//调用类组件实例的updateComponent进行更新
+  if(willUpdate){
+    // 调用类组件实例的更新方法
+    classInstance.forceUpdate()//调用类组件实例的updateComponent进行更新
+  }
 }
 
 
@@ -83,6 +94,7 @@ export class Component {
 
   updateComponent(){
   }
+
   forceUpdate(){
     const oldRenderVdom = this.oldRenderVdom
     // 根据老的虚拟dom查找老的真实dom

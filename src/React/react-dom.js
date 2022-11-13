@@ -8,13 +8,19 @@ import { addEvent } from './events'
 function render(vdom,container) {
   const newDOM = createDOM(vdom)
   container.appendChild(newDOM)
+  // 挂载后执行 componentDidMount 生命周期方法
+  if(newDOM.componentDidMount) newDOM.componentDidMount()
 }
 
 function createDOM(vdom){
+  if(vdom === null) return
+
   const { type,props,ref } = vdom
   let dom;//真实dom元素
   if(type === REACT_TEXT){
     dom = document.createTextNode(props.content)
+  }else if (type.$$typeof && typeof type === 'object'){
+    return mountForwardRefComponent(vdom)
   }else if(typeof type === 'function'){
     if(type.isReactComponent === true){//类组件
       return mountClassComponent(vdom)
@@ -64,6 +70,13 @@ function updateProps(dom,oldProps,newProps){
   }
 }
 
+function mountForwardRefComponent(vdom){
+  const { type,props,ref } = vdom
+  const renderVdom = type.render(props,ref)
+  vdom.oldRenderVdom = renderVdom
+  return createDOM(renderVdom)
+}
+
 function mountFunctionComponent(vdom){
   const { type,props } = vdom
   const renderVdom = type(props)
@@ -73,11 +86,18 @@ function mountFunctionComponent(vdom){
 
 function mountClassComponent(vdom){
   const { type,props,ref } = vdom
-  const classInstance = new type(props)
+  const defaultProps = type.defaultProps || {}
+  const classInstance = new type({...defaultProps,...props})
+
+  if(classInstance.componentWillMount) classInstance.componentWillMount()
   const renderVdom = classInstance.render()
+
   classInstance.oldRenderVdom = vdom.oldRenderVdom = renderVdom
   if(ref) ref.current = classInstance
-  return createDOM(renderVdom)
+  const dom = createDOM(renderVdom)
+  if(classInstance.componentDidMount) 
+    dom.componentDidMount = classInstance.componentDidMount.bind(this)
+  return dom
 }
 /**
  * 根据vdom返回真实dom
@@ -93,6 +113,25 @@ export function findDom(vdom){
   }
   return dom
 } 
+
+function updateChildren(parentNode,oldVChildren,newVChildren){
+  oldVChildren = Array.isArray(oldVChildren) ? oldVChildren : [oldVChildren]
+  newVChildren = Array.isArray(newVChildren) ? newVChildren : [newVChildren]
+  const maxLength = Math.max(oldVChildren.length,newVChildren.length)
+  for(let i = 0 ; i < maxLength; i++){
+    compareTwoVdom(parentNode,oldVChildren[i],newVChildren[i])
+  }
+}
+
+function updateElement(oldRenderVdom,newRenderVdom){
+  console.log(oldRenderVdom.type)
+  if(typeof oldRenderVdom.type === 'string'){ //原生组件
+    const currentDOM = newRenderVdom.dom = findDom(oldRenderVdom)
+    updateProps(currentDOM,oldRenderVdom.props,newRenderVdom.props)
+    updateChildren(currentDOM,oldRenderVdom.props.children,newRenderVdom.props.children)
+  }
+}
+
 /**
  * 比较新旧vdom，找出差异，更新
  * @param {*} parentNode 父级真实节点
@@ -101,15 +140,44 @@ export function findDom(vdom){
  */
 // 目前还没有实现diff
 export function compareTwoVdom(parentNode,oldRenderVdom,newRenderVdom){
-  const oldDom = findDom(oldRenderVdom)
-  const newDom = createDOM(newRenderVdom)
-  /** replaceChild
-   *  newDom 您希望插入的节点对象。
-   *  oldDom 您希望删除的节点对象。
-   */
-  parentNode.replaceChild(newDom,oldDom)
-}
+  
+  if(!oldRenderVdom && !newRenderVdom) return null
+  if(oldRenderVdom && !newRenderVdom){//销毁老组件
+    const currentDOM = findDom(oldRenderVdom);
+    currentDOM.parentNode.removeChild(currentDOM) //把老的真实dom删掉
+    if(oldRenderVdom.classInstance && oldRenderVdom.classInstance.componentWillUnmount){
+      oldRenderVdom.classInstance.componentWillUnmount()
+    }
+    return null
+  }else if(!oldRenderVdom && newRenderVdom){
+    const newDOM = createDOM(newRenderVdom)
+    parentNode.appendChild(newDOM)
+      // 挂载后执行 componentDidMount 生命周期方法
+    if(newDOM.componentDidMount) newDOM.componentDidMount()
+    return newRenderVdom
+    
+  }else if(oldRenderVdom && newRenderVdom && oldRenderVdom.type !== newRenderVdom.type){
+    /** replaceChild
+     *  newDom 您希望插入的节点对象。
+     *  oldDom 您希望删除的节点对象。
+     */
+    const oldDOM = findDom(oldRenderVdom)
+    const newDOM = createDOM(newRenderVdom)
+    oldDOM.parentNode.replaceChild(newDOM,oldDOM)
+    if(oldRenderVdom.classInstance && oldRenderVdom.classInstance.componentWillUnmount){
+      oldRenderVdom.classInstance.componentWillUnmount()
+    }
+    return newRenderVdom
+  }else{//老的有，新的也有类型也一样就需要复用节点，深度递归
+    // updateElement(oldRenderVdom,newRenderVdom)
+    
+    const oldDOM = findDom(oldRenderVdom)
+    const newDOM = createDOM(newRenderVdom)
+    oldDOM.parentNode.replaceChild(newDOM,oldDOM)
 
+    return newRenderVdom
+  }
+}
 /**
 classInstance.__proto__.__proto__.__proto__ = Object
 
@@ -124,9 +192,6 @@ class Component
 ƒ Object()
 
  */
-
-
-
 
 const ReactDOM = {
   render
