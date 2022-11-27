@@ -84,7 +84,6 @@ export class Component {
   constructor(props){
     this.props = props
     this.state = {}
-
     this.updater = new Updater(this)
   }
 
@@ -100,6 +99,7 @@ export class Component {
     // 根据老的虚拟dom查找老的真实dom
     const oldDom = findDom(oldRenderVdom)
     const newRenderVdom = this.render()
+    // 更新前的信息 getSnapshotBeforeUpdate
     const extraArgs = this.getSnapshotBeforeUpdate && this.getSnapshotBeforeUpdate.call(this)
     compareTwoVdom(oldDom.parentNode,oldRenderVdom,newRenderVdom) //比较差异，更新页面
     this.oldRenderVdom = newRenderVdom

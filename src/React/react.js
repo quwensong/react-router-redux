@@ -41,11 +41,45 @@ function createRef(){
   }
 }
 
+function createContext(){
+  const context = { Provider,Consumer }
+
+  // 组件的属性和子组件都会放在props里面
+  function Provider({value,children}){
+    context._value = value
+    return children
+  }
+  function Consumer({children}){
+    return children(context._value)
+  }
+
+  return context
+}
+
+/**
+ * 根据老元素克隆出新的元素
+ * @param {*} oldElement 老元素
+ * @param {*} newProps 新属性
+ * @param {*} children 新的儿子们
+ * @returns 
+ */
+function cloneElement(oldElement,newProps,children){
+  if(arguments.length > 3){
+    children = Array.prototype.slice.call(arguments,2).map(wrapToVdom)
+  }else{
+    children = wrapToVdom(children)
+  }
+  const props = {...oldElement.props,...newProps,children}
+  return {...oldElement,props}
+}
+
 
 const React = {
   createElement,
+  cloneElement,
   createRef,
   forwardRef,
+  createContext,
   Component
 }
 

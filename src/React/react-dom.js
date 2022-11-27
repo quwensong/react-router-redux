@@ -8,12 +8,13 @@ import { addEvent } from './events'
 function render(vdom,container) {
   const newDOM = createDOM(vdom)
   container.appendChild(newDOM)
-  // 挂载后执行 componentDidMount 生命周期方法
+  // 挂载后执行 子组件的 componentDidMount 生命周期方法
   if(newDOM.componentDidMount) newDOM.componentDidMount()
 }
 
 function createDOM(vdom){
   if(vdom === null) return
+
 
   const { type,props,ref } = vdom
   let dom;//真实dom元素
@@ -88,6 +89,10 @@ function mountClassComponent(vdom){
   const { type,props,ref } = vdom
   const defaultProps = type.defaultProps || {}
   const classInstance = new type({...defaultProps,...props})
+  // type.contextType 就是 context,context上面有个_value属性
+  if(type.contextType){
+    classInstance.context = type.contextType._value
+  }
 
   if(classInstance.componentWillMount) classInstance.componentWillMount()
   const renderVdom = classInstance.render()
@@ -95,8 +100,9 @@ function mountClassComponent(vdom){
   classInstance.oldRenderVdom = vdom.oldRenderVdom = renderVdom
   if(ref) ref.current = classInstance
   const dom = createDOM(renderVdom)
-  if(classInstance.componentDidMount) 
+  if(classInstance.componentDidMount){
     dom.componentDidMount = classInstance.componentDidMount.bind(this)
+  }
   return dom
 }
 /**
