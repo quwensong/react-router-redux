@@ -1,2 +1,1 @@
-# my-react
-A simple react source code
+react + react-router + redux源码
