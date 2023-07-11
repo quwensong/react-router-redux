@@ -54,7 +54,7 @@ class Demo extends React.Component {
   // componentDidMount() {
   //   this.setState({ number: 1 });
   //   console.log("componentDidMount", this.state);
-  // }
+// }
 
   render() {
     return <div>index</div>;

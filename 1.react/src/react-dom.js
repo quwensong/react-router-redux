@@ -258,8 +258,8 @@ function mountClassComponent(vdom) {
   classInstance.oldRenderVdom = vdom.oldRenderVdom = renderVdom; //挂载的时候计算出虚拟DOM，然后挂到类的实例上
   if (ref) ref.current = classInstance; //ref.current指向类组件的实例
   let dom = createDOM(renderVdom);
-  //TODO:暂时把didMount方法暂存到dom上,很重要
-  if (classInstance.componentDidMount) {
+  //TODO: 暂时把didMount方法暂存到dom上,很重要
+  if (classInstance.componentDidMount){
     dom.componentDidMount = classInstance.componentDidMount.bind(classInstance);
   }
   return dom;
@@ -319,14 +319,14 @@ export function findDOM(vdom) {
  * @param {*} newVdom
  */
 export function compareTwoVdom(parentDOM, oldVdom, newVdom, nextDOM) {
-  /**
-   * oldVdom         newVdom          说明
-   * 空              空               什么都不用做
-   * 非空            空               删除老的
-   * 空              非空             创建新的
-   * 非空            非空             类型不一样，直接替换
-   * 非空            非空             类型一样，看属性，继续深度比较
-   */
+    /**
+     * oldVdom         newVdom          说明
+     * 空              空               什么都不用做
+     * 非空            空               删除老的
+     * 空              非空             创建新的
+     * 非空            非空             类型不一样，直接替换
+     * 非空            非空             类型一样，看属性，继续深度比较
+     */
 
   if (!oldVdom && !newVdom) {
     //如果老的虚拟DOM是null,新的虚拟DOM也是null
@@ -340,7 +340,7 @@ export function compareTwoVdom(parentDOM, oldVdom, newVdom, nextDOM) {
   } else if (!oldVdom && newVdom) {
     //如果老的没有，新的有，就根据新的组件创建新的DOM并且添加到父DOM容器中
     let newDOM = createDOM(newVdom);
-
+  
     if (nextDOM) {
       parentDOM.insertBefore(newDOM, nextDOM);
     } else {
@@ -443,6 +443,8 @@ function updateClassComponent(oldVdom, newVdom) {
   if (classInstance.componentWillReceiveProps) {
     classInstance.componentWillReceiveProps();
   }
+  // 更新当前组件的 props
+  // newVdom.props :父组件传过来的值
   classInstance.updater.emitUpdate(newVdom.props);
 }
 function updateChildren(parentDOM, oldVChildren, newVChildren) {
