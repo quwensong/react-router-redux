@@ -258,9 +258,10 @@ function mountClassComponent(vdom) {
   classInstance.oldRenderVdom = vdom.oldRenderVdom = renderVdom; //挂载的时候计算出虚拟DOM，然后挂到类的实例上
   if (ref) ref.current = classInstance; //ref.current指向类组件的实例
   let dom = createDOM(renderVdom);
-  //暂时把didMount方法暂存到dom上
-  if (classInstance.componentDidMount)
+  //TODO:暂时把didMount方法暂存到dom上,很重要
+  if (classInstance.componentDidMount) {
     dom.componentDidMount = classInstance.componentDidMount.bind(classInstance);
+  }
   return dom;
 }
 function mountFunctionComponent(vdom) {
@@ -318,14 +319,14 @@ export function findDOM(vdom) {
  * @param {*} newVdom
  */
 export function compareTwoVdom(parentDOM, oldVdom, newVdom, nextDOM) {
-    /**
-     * oldVdom         newVdom          说明
-     * 空              空               什么都不用做
-     * 非空            空               删除老的
-     * 空              非空             创建新的
-     * 非空            非空             类型不一样，直接替换
-     * 非空            非空             类型一样，看属性，继续深度比较
-     */
+  /**
+   * oldVdom         newVdom          说明
+   * 空              空               什么都不用做
+   * 非空            空               删除老的
+   * 空              非空             创建新的
+   * 非空            非空             类型不一样，直接替换
+   * 非空            非空             类型一样，看属性，继续深度比较
+   */
 
   if (!oldVdom && !newVdom) {
     //如果老的虚拟DOM是null,新的虚拟DOM也是null
@@ -339,6 +340,7 @@ export function compareTwoVdom(parentDOM, oldVdom, newVdom, nextDOM) {
   } else if (!oldVdom && newVdom) {
     //如果老的没有，新的有，就根据新的组件创建新的DOM并且添加到父DOM容器中
     let newDOM = createDOM(newVdom);
+
     if (nextDOM) {
       parentDOM.insertBefore(newDOM, nextDOM);
     } else {
@@ -447,8 +449,10 @@ function updateChildren(parentDOM, oldVChildren, newVChildren) {
   oldVChildren = Array.isArray(oldVChildren) ? oldVChildren : [oldVChildren];
   newVChildren = Array.isArray(newVChildren) ? newVChildren : [newVChildren];
   let maxLength = Math.max(oldVChildren.length, newVChildren.length);
+  // 整个代码的作用是，通过循环遍历虚拟DOM节点，找到每个虚拟DOM节点对应的真实DOM节点，并比较它们之间的差异来实现页面的更新。
   for (let i = 0; i < maxLength; i++) {
     //找当前的虚拟DOM节点这后的最近的一个真实DOM节点
+    // 即节点的索引大于i且节点存在且可以找到对应的真实DOM节点。
     let nextVNode = oldVChildren.find(
       (item, index) => index > i && item && findDOM(item)
     );
