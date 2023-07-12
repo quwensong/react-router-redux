@@ -19,6 +19,7 @@ function render(vdom, container) {
   mount(vdom, container);
   scheduleUpdate = () => {
     hookIndex = 0; //vdom并不指向当前的更新，而是指向根元素
+    // 子组件发生变化，需要重新从根组件开始重新渲染，相当于重新调用mount方法
     compareTwoVdom(container, vdom, vdom);
   };
 }
@@ -249,9 +250,11 @@ function mountClassComponent(vdom) {
   let { type, props, ref } = vdom;
   let defaultProps = type.defaultProps || {};
   let classInstance = new type({ ...defaultProps, ...props });
+//  
   if (type.contextType) {
     classInstance.context = type.contextType._currentValue;
   }
+
   vdom.classInstance = classInstance;
   if (classInstance.componentWillMount) classInstance.componentWillMount();
   let renderVdom = classInstance.render();

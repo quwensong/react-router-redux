@@ -86,6 +86,15 @@ function forwardRef(render) {
     render, //原来那个函数件
   };
 }
+
+function memo(type, compare = shallowEqual) {
+  return {
+    $$typeof: REACT_MEMO,
+    type, //原来那个真正的函数组件
+    compare,
+  };
+}
+
 /* function createContext(){
     function Provider({value,children}){
         Provider._value = value;
@@ -102,13 +111,7 @@ function createContext() {
   context.Consumer = { $$typeof: REACT_CONTEXT, _context: context };
   return context;
 }
-function memo(type, compare = shallowEqual) {
-  return {
-    $$typeof: REACT_MEMO,
-    type, //原来那个真正的函数组件
-    compare,
-  };
-}
+
 function useContext(context) {
   return context._currentValue;
 }
@@ -143,4 +146,3 @@ const React = {
   Children,
 };
 export default React;
-
