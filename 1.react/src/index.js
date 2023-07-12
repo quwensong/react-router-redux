@@ -8,8 +8,6 @@ import ReactDOM from "react-dom";
  * 3.在函数内部需要调用其它的Hooks
  */
 
-
-
 function useCounter(initialState) {
   let [number, setNumber] = React.useState(initialState);
   let handleClick = () => {
@@ -54,7 +52,8 @@ class Demo extends React.Component {
   // componentDidMount() {
   //   this.setState({ number: 1 });
   //   console.log("componentDidMount", this.state);
-// }
+  // }
+  static getDerivedStateFromProps(nextProps, prevState) {}
 
   render() {
     return <div>index</div>;
@@ -71,11 +70,9 @@ class App extends React.Component {
     // console.log(typeof this.demoRef);
   }
 
-
-
   render() {
     return (
-      <div> 
+      <div>
         <Demo ref={this.demoRef} />
         <Counter1 />
         <Counter2 />
