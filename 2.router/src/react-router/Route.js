@@ -4,6 +4,13 @@ import matchPath from './matchPath';
 class Route  extends React.Component{
   static contextType = RouterContext;
   render(){
+
+      /**
+       * type :类组件 
+       *   if (type.contextType) {
+            classInstance.context = type.contextType._currentValue;
+          }
+       */
       let {history,location} = this.context;//static contextType=>this.context
       let {component:RouteComponent,computedMatch,render,children} = this.props;
       let match = computedMatch?computedMatch:matchPath(location.pathname,this.props);

@@ -15,6 +15,23 @@ let mountingComponent = null;
 let hookState = []; //这里存放着所有的状态
 let hookIndex = 0; //当前的执行的hook的索引
 let scheduleUpdate; //调度更新方法
+
+/**
+ * 总的来说，这段代码的作用是在没有原生的 queueMicrotask 函数的情况下，
+ * 定义一个类似的函数，并确保在调用回调函数时能够捕获异常。
+ */
+if (typeof window.queueMicrotask !== "function") {
+  window.queueMicrotask = function (callback) {
+    Promise.resolve()
+      .then(callback)
+      .catch((e) =>
+        setTimeout(() => {
+          throw e;
+        })
+      );
+  };
+}
+
 function render(vdom, container) {
   mount(vdom, container);
   scheduleUpdate = () => {
@@ -45,6 +62,8 @@ export function useEffect(callback, deps) {
     let [destroy, lastDeps] = hookState[hookIndex];
     let everySame = deps.every((item, index) => item === lastDeps[index]);
     if (everySame) {
+      // 如果相等就跳过啥也不干
+      // [1,2,3,4,useEffect]
       hookIndex++;
     } else {
       //销毁函数每次都是在下一次执行的时候才会触发执行吗
@@ -62,6 +81,7 @@ export function useEffect(callback, deps) {
     });
   }
 }
+
 export function useLayoutEffect(callback, deps) {
   if (hookState[hookIndex]) {
     let [destroy, lastDeps] = hookState[hookIndex];
@@ -96,11 +116,14 @@ export function useReducer(reducer, initialState) {
 
   let currentIndex = hookIndex;
   function dispatch(action) {
+    // 如果用户传入 reducer 就使用 reducer 更新数据， 否则直接使用 action --> 用户传入的数据:  setState(action) 例如里面的就是action
     hookState[currentIndex] = reducer
       ? reducer(hookState[currentIndex], action)
       : action;
     scheduleUpdate();
   }
+
+  // [state,setState]
   return [hookState[hookIndex++], dispatch];
 }
 export function useState(initialState) {
@@ -120,6 +143,7 @@ export function useMemo(factory, deps) {
   if (hookState[hookIndex]) {
     //说明不是第一次是更新
     let [lastMemo, lastDeps] = hookState[hookIndex];
+    // 检查两个数组 deps 和 lastDeps 中的每个元素是否相等，并将结果保存在变量 everySame 中。
     let everySame = deps.every((item, index) => item === lastDeps[index]);
     if (everySame) {
       hookIndex++;
@@ -250,7 +274,7 @@ function mountClassComponent(vdom) {
   let { type, props, ref } = vdom;
   let defaultProps = type.defaultProps || {};
   let classInstance = new type({ ...defaultProps, ...props });
-//  
+  //
   if (type.contextType) {
     classInstance.context = type.contextType._currentValue;
   }
@@ -262,7 +286,7 @@ function mountClassComponent(vdom) {
   if (ref) ref.current = classInstance; //ref.current指向类组件的实例
   let dom = createDOM(renderVdom);
   //TODO: 暂时把didMount方法暂存到dom上,很重要
-  if (classInstance.componentDidMount){
+  if (classInstance.componentDidMount) {
     dom.componentDidMount = classInstance.componentDidMount.bind(classInstance);
   }
   return dom;
@@ -322,14 +346,14 @@ export function findDOM(vdom) {
  * @param {*} newVdom
  */
 export function compareTwoVdom(parentDOM, oldVdom, newVdom, nextDOM) {
-    /**
-     * oldVdom         newVdom          说明
-     * 空              空               什么都不用做
-     * 非空            空               删除老的
-     * 空              非空             创建新的
-     * 非空            非空             类型不一样，直接替换
-     * 非空            非空             类型一样，看属性，继续深度比较
-     */
+  /**
+   * oldVdom         newVdom          说明
+   * 空              空               什么都不用做
+   * 非空            空               删除老的
+   * 空              非空             创建新的
+   * 非空            非空             类型不一样，直接替换
+   * 非空            非空             类型一样，看属性，继续深度比较
+   */
 
   if (!oldVdom && !newVdom) {
     //如果老的虚拟DOM是null,新的虚拟DOM也是null
@@ -343,7 +367,7 @@ export function compareTwoVdom(parentDOM, oldVdom, newVdom, nextDOM) {
   } else if (!oldVdom && newVdom) {
     //如果老的没有，新的有，就根据新的组件创建新的DOM并且添加到父DOM容器中
     let newDOM = createDOM(newVdom);
-  
+
     if (nextDOM) {
       parentDOM.insertBefore(newDOM, nextDOM);
     } else {
