@@ -36,7 +36,7 @@ function render(vdom, container) {
   mount(vdom, container);
   scheduleUpdate = () => {
     hookIndex = 0; //vdom并不指向当前的更新，而是指向根元素
-    // 子组件发生变化，需要重新从根组件开始重新渲染，相当于重新调用mount方法
+    // 子组件发生变化，需要重新从根组件开始重新渲染，相当于重新调用mount方法。
     compareTwoVdom(container, vdom, vdom);
   };
 }
